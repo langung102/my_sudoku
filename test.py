@@ -3,11 +3,60 @@ from collections import defaultdict
 import time
 import resource
 
+def is_valid(board, row, col, num):
+    # Check if the number is already present in the current row
+    for i in range(9):
+        if board[row][i] == num:
+            return False
+
+    # Check if the number is already present in the current column
+    for i in range(9):
+        if board[i][col] == num:
+            return False
+
+    # Check if the number is already present in the current 3x3 box
+    start_row = (row // 3) * 3
+    start_col = (col // 3) * 3
+    for i in range(3):
+        for j in range(3):
+            if board[start_row + i][start_col + j] == num:
+                return False
+
+    return True
+
+
 def find_empty_location(board):
     for i in range(9):
         for j in range(9):
             if board[i][j] == 0:
                 return i, j
+    return None
+
+def DFS(board):
+    stack = [board]
+
+    while stack:
+        current_board = stack.pop()
+
+        empty_position = find_empty_location(current_board)
+        if empty_position is None:
+            # No empty positions left, the Sudoku is solved
+            return current_board
+
+        row, col = empty_position
+
+        for num in range(1, 10):
+            if is_valid(current_board, row, col, num):
+                # Try placing the number in the empty position
+                current_board[row][col] = num
+
+                # Add the updated board to the stack
+                stack.append([row[:] for row in current_board])
+
+                # Revert the change for backtracking
+                current_board[row][col] = 0
+
+    # No solution found
     return None
 
 def get_neighbors(board, row, col):
@@ -59,7 +108,7 @@ def solve_puzzle():
     peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     
     for puzzle in puzzles:
-        solved_board = best_first_search(puzzle)
+        solved_board = DFS((puzzle))
         if solved_board:
             print("Solution:")
             for row in solved_board:
