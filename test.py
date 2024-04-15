@@ -2,6 +2,10 @@ import heapq
 from collections import defaultdict
 import time
 import resource
+from generator import generate_sudoku
+
+PUZZLE_ROW = 9
+PUZZLE_COL = 9
 
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
@@ -32,6 +36,13 @@ def find_empty_location(board):
                 return i, j
     return None
 
+def find_empty_location_bfs(board):
+    for i in range(9):
+        for j in range(9):
+            if board[i][j] == 0:
+                return i, j
+    return None
+
 def DFS(board):
     stack = [board]
 
@@ -44,22 +55,14 @@ def DFS(board):
             return current_board
 
         row, col = empty_position
-
-        for num in range(1, 10):
-            if is_valid(current_board, row, col, num):
-                # Try placing the number in the empty position
-                current_board[row][col] = num
-
-                # Add the updated board to the stack
-                stack.append([row[:] for row in current_board])
-
-                # Revert the change for backtracking
-                current_board[row][col] = 0
+        neighbors = get_neighbors_dfs(current_board, row, col)
+        for neighbor_board in neighbors:
+            stack.append(neighbor_board)
 
     # No solution found
     return None
 
-def get_neighbors(board, row, col):
+def get_neighbors_dfs(board, row, col):
     neighbors = []
     
     # Get numbers already present in the row, column, and 3x3 sub-grid
@@ -75,30 +78,149 @@ def get_neighbors(board, row, col):
     for num in unique_numbers:
         new_board = [row[:] for row in board]
         new_board[row][col] = num
-        priority = len(unique_numbers)  # Higher priority for cells with fewer choices
-        neighbors.append((priority, new_board))
+        neighbors.append((new_board))
     
     return neighbors
 
-def best_first_search(board):
-    priority_queue = []
-    heapq.heappush(priority_queue, (0, board))
+def get_neighbors_bestfs(board):
+    neighbors = []
+    row_new = 0
+    col_new = 0
+    unique_numbers = set(range(20))
     
-    while priority_queue:
-        _, current_board = heapq.heappop(priority_queue)
+    for row in range(9):
+        for col in range(9):
+            if (board[row][col] != 0):
+                continue
+            # Get numbers already present in the row, column, and 3x3 sub-grid
+            row_values = set(board[row])
+            col_values = set(board[i][col] for i in range(9))
+            start_row, start_col = 3 * (row // 3), 3 * (col // 3)
+            square_values = set(board[i][j] for i in range(start_row, start_row + 3) for j in range(start_col, start_col + 3))
+            
+            # Get unique numbers available for this cell
+            tmp = set(range(1, 10)) - (row_values | col_values | square_values)
+            if (len(tmp) < len(unique_numbers)):
+                unique_numbers = tmp
+                row_new = row
+                col_new = col
+    
+    # Generate neighbor nodes with priorities based on uniqueness
+    for num in unique_numbers:
+        new_board = [row[:] for row in board]
+        new_board[row_new][col_new] = num
+        # priority = len(unique_numbers)  # Higher priority for cells with fewer choices
+        neighbors.append((new_board))
+    return neighbors
+
+def best_first_search(board):
+    stack = [board]
+    
+    while stack:
+        current_board = stack.pop()
         
         empty_location = find_empty_location(current_board)
         if not empty_location:
             return current_board
         
-        row, col = empty_location
-        
         # Get neighbor nodes and add them to the priority queue
-        neighbors = get_neighbors(current_board, row, col)
-        for neighbor_priority, neighbor_board in neighbors:
-            heapq.heappush(priority_queue, (neighbor_priority, neighbor_board))
+        neighbors = get_neighbors_bestfs(current_board)
+        for neighbor_board in neighbors:
+            stack.append(neighbor_board)
     
     return None
+
+def valid_row(row, grid):
+    s = set()
+    for i in range(9):
+        # Checking for values outside 0 and 9;
+        # 0 is considered valid because it
+        # denotes an empty cell.
+        # Removing zeros and the checking for values and
+        # outside 1 and 9 is another way of doing
+        # the same thing.
+        if grid[row][i] < 0 or grid[row][i] > 9:
+            print("Invalid value")
+            return -1
+        else:
+            # Checking for repeated values.
+            if grid[row][i] != 0:
+                if grid[row][i] in s:
+                    return 0
+                else:
+                    s.add(grid[row][i])
+    return 1
+
+# Function to check if a given column is valid. It will return:
+# -1 if the column contains an invalid value
+# 0 if the column contains repeated values
+# 1 is the column is valid.
+def valid_col(col, grid):
+    s = set()
+    for i in range(9):
+        # Checking for values outside 0 and 9;
+        # 0 is considered valid because it
+        # denotes an empty cell.
+        # Removing zeros and the checking for values and
+        # outside 1 and 9 is another way of doing
+        # the same thing.
+        if grid[i][col] < 0 or grid[i][col] > 9:
+            print("Invalid value")
+            return -1
+        else:
+            # Checking for repeated values.
+            if grid[i][col] != 0:
+                if grid[i][col] in s:
+                    return 0
+                else:
+                    s.add(grid[i][col])
+    return 1
+
+# Function to check if all the subsquares are valid. It will return:
+# -1 if a subsquare contains an invalid value
+# 0 if a subsquare contains repeated values
+# 1 if the subsquares are valid.
+def valid_subsquares(grid):
+    for row in range(0, 9, 3):
+        for col in range(0, 9, 3):
+            s = set()
+            for r in range(row, row + 3):
+                for c in range(col, col + 3):
+                    # Checking for values outside 0 and 9;
+                    # 0 is considered valid because it
+                    # denotes an empty cell.
+                    # Removing zeros and the checking for values and
+                    # outside 1 and 9 is another way of doing
+                    # the same thing.
+                    if grid[r][c] < 0 or grid[r][c] > 9:
+                        print("Invalid value")
+                        return -1
+                    else:
+                        # Checking for repeated values
+                        if grid[r][c] != 0:
+                            if grid[r][c] in s:
+                                return 0
+                            else:
+                                s.add(grid[r][c])
+    return 1
+
+# Function to check if the board invalid.
+def valid_board(grid):
+    for i in range(9):
+        res1 = valid_row(i, grid)
+        res2 = valid_col(i, grid)
+        # If a row or a column is invalid, then the board is invalid.
+        if res1 < 1 or res2 < 1:
+            print("The board is invalid")
+            return False
+    # if any one the subsquares is invalid, then the board is invalid.
+    res3 = valid_subsquares(grid)
+    if res3 < 1:
+        print("The board is invalid")
+        return False
+    else:
+        print("The board is valid")
+        return True
 
 def solve_puzzle():
     filename = 'sudoku_puzzles.txt'  # Change this to the path of your file
@@ -108,8 +230,8 @@ def solve_puzzle():
     peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     
     for puzzle in puzzles:
-        solved_board = DFS((puzzle))
-        if solved_board:
+        solved_board = best_first_search((puzzle))
+        if solved_board and valid_board(puzzle):
             print("Solution:")
             for row in solved_board:
                 print(row)
