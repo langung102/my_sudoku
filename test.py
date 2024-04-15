@@ -2,27 +2,27 @@ import heapq
 from collections import defaultdict
 import time
 import resource
+import math
 from generator import generate_sudoku
 
-PUZZLE_ROW = 9
-PUZZLE_COL = 9
-
+PUZZLE_SIZE = 16
+SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         if board[row][i] == num:
             return False
 
     # Check if the number is already present in the current column
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         if board[i][col] == num:
             return False
 
     # Check if the number is already present in the current 3x3 box
-    start_row = (row // 3) * 3
-    start_col = (col // 3) * 3
-    for i in range(3):
-        for j in range(3):
+    start_row = (row // SUB_GRID ) * SUB_GRID 
+    start_col = (col // SUB_GRID ) * SUB_GRID 
+    for i in range(SUB_GRID ):
+        for j in range(SUB_GRID ):
             if board[start_row + i][start_col + j] == num:
                 return False
 
@@ -30,15 +30,15 @@ def is_valid(board, row, col, num):
 
 
 def find_empty_location(board):
-    for i in range(9):
-        for j in range(9):
+    for i in range(PUZZLE_SIZE):
+        for j in range(PUZZLE_SIZE):
             if board[i][j] == 0:
                 return i, j
     return None
 
 def find_empty_location_bfs(board):
-    for i in range(9):
-        for j in range(9):
+    for i in range(PUZZLE_SIZE):
+        for j in range(PUZZLE_SIZE):
             if board[i][j] == 0:
                 return i, j
     return None
@@ -67,9 +67,9 @@ def get_neighbors_dfs(board, row, col):
     
     # Get numbers already present in the row, column, and 3x3 sub-grid
     row_values = set(board[row])
-    col_values = set(board[i][col] for i in range(9))
-    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    square_values = set(board[i][j] for i in range(start_row, start_row + 3) for j in range(start_col, start_col + 3))
+    col_values = set(board[i][col] for i in range(PUZZLE_SIZE))
+    start_row, start_col = SUB_GRID * (row // SUB_GRID), SUB_GRID * (col // SUB_GRID)
+    square_values = set(board[i][j] for i in range(start_row, start_row + SUB_GRID) for j in range(start_col, start_col + SUB_GRID))
     
     # Get unique numbers available for this cell
     unique_numbers = set(range(1, 10)) - (row_values | col_values | square_values)
@@ -88,15 +88,15 @@ def get_neighbors_bestfs(board):
     col_new = 0
     unique_numbers = set(range(20))
     
-    for row in range(9):
-        for col in range(9):
+    for row in range(PUZZLE_SIZE):
+        for col in range(PUZZLE_SIZE):
             if (board[row][col] != 0):
                 continue
             # Get numbers already present in the row, column, and 3x3 sub-grid
             row_values = set(board[row])
-            col_values = set(board[i][col] for i in range(9))
-            start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-            square_values = set(board[i][j] for i in range(start_row, start_row + 3) for j in range(start_col, start_col + 3))
+            col_values = set(board[i][col] for i in range(PUZZLE_SIZE))
+            start_row, start_col = SUB_GRID * (row // SUB_GRID), SUB_GRID * (col // SUB_GRID)
+            square_values = set(board[i][j] for i in range(start_row, start_row + SUB_GRID) for j in range(start_col, start_col + SUB_GRID))
             
             # Get unique numbers available for this cell
             tmp = set(range(1, 10)) - (row_values | col_values | square_values)
@@ -132,14 +132,14 @@ def best_first_search(board):
 
 def valid_row(row, grid):
     s = set()
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         # Checking for values outside 0 and 9;
         # 0 is considered valid because it
         # denotes an empty cell.
         # Removing zeros and the checking for values and
         # outside 1 and 9 is another way of doing
         # the same thing.
-        if grid[row][i] < 0 or grid[row][i] > 9:
+        if grid[row][i] < 0 or grid[row][i] > PUZZLE_SIZE:
             print("Invalid value")
             return -1
         else:
@@ -157,14 +157,14 @@ def valid_row(row, grid):
 # 1 is the column is valid.
 def valid_col(col, grid):
     s = set()
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         # Checking for values outside 0 and 9;
         # 0 is considered valid because it
         # denotes an empty cell.
         # Removing zeros and the checking for values and
         # outside 1 and 9 is another way of doing
         # the same thing.
-        if grid[i][col] < 0 or grid[i][col] > 9:
+        if grid[i][col] < 0 or grid[i][col] > PUZZLE_SIZE:
             print("Invalid value")
             return -1
         else:
@@ -181,18 +181,18 @@ def valid_col(col, grid):
 # 0 if a subsquare contains repeated values
 # 1 if the subsquares are valid.
 def valid_subsquares(grid):
-    for row in range(0, 9, 3):
-        for col in range(0, 9, 3):
+    for row in range(0, PUZZLE_SIZE, SUB_GRID):
+        for col in range(0, PUZZLE_SIZE, SUB_GRID):
             s = set()
-            for r in range(row, row + 3):
-                for c in range(col, col + 3):
+            for r in range(row, row + SUB_GRID):
+                for c in range(col, col + SUB_GRID):
                     # Checking for values outside 0 and 9;
                     # 0 is considered valid because it
                     # denotes an empty cell.
                     # Removing zeros and the checking for values and
                     # outside 1 and 9 is another way of doing
                     # the same thing.
-                    if grid[r][c] < 0 or grid[r][c] > 9:
+                    if grid[r][c] < 0 or grid[r][c] > PUZZLE_SIZE:
                         print("Invalid value")
                         return -1
                     else:
@@ -206,7 +206,7 @@ def valid_subsquares(grid):
 
 # Function to check if the board invalid.
 def valid_board(grid):
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         res1 = valid_row(i, grid)
         res2 = valid_col(i, grid)
         # If a row or a column is invalid, then the board is invalid.
@@ -230,7 +230,7 @@ def solve_puzzle():
     peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     
     for puzzle in puzzles:
-        solved_board = best_first_search((puzzle))
+        solved_board = DFS((puzzle))
         if solved_board and valid_board(puzzle):
             print("Solution:")
             for row in solved_board:
