@@ -3,26 +3,28 @@ from collections import defaultdict
 import time
 import resource
 from generator import generate_sudoku
+import matplotlib.pyplot as plt
+import numpy as np
+import math
 
-PUZZLE_ROW = 9
-PUZZLE_COL = 9
-
+PUZZLE_SIZE = 9
+SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         if board[row][i] == num:
             return False
 
     # Check if the number is already present in the current column
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         if board[i][col] == num:
             return False
 
     # Check if the number is already present in the current 3x3 box
-    start_row = (row // 3) * 3
-    start_col = (col // 3) * 3
-    for i in range(3):
-        for j in range(3):
+    start_row = (row // SUB_GRID ) * SUB_GRID 
+    start_col = (col // SUB_GRID ) * SUB_GRID 
+    for i in range(SUB_GRID ):
+        for j in range(SUB_GRID ):
             if board[start_row + i][start_col + j] == num:
                 return False
 
@@ -30,15 +32,15 @@ def is_valid(board, row, col, num):
 
 
 def find_empty_location(board):
-    for i in range(9):
-        for j in range(9):
+    for i in range(PUZZLE_SIZE):
+        for j in range(PUZZLE_SIZE):
             if board[i][j] == 0:
                 return i, j
     return None
 
 def find_empty_location_bfs(board):
-    for i in range(9):
-        for j in range(9):
+    for i in range(PUZZLE_SIZE):
+        for j in range(PUZZLE_SIZE):
             if board[i][j] == 0:
                 return i, j
     return None
@@ -67,9 +69,9 @@ def get_neighbors_dfs(board, row, col):
     
     # Get numbers already present in the row, column, and 3x3 sub-grid
     row_values = set(board[row])
-    col_values = set(board[i][col] for i in range(9))
-    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    square_values = set(board[i][j] for i in range(start_row, start_row + 3) for j in range(start_col, start_col + 3))
+    col_values = set(board[i][col] for i in range(PUZZLE_SIZE))
+    start_row, start_col = SUB_GRID * (row // SUB_GRID), SUB_GRID * (col // SUB_GRID)
+    square_values = set(board[i][j] for i in range(start_row, start_row + SUB_GRID) for j in range(start_col, start_col + SUB_GRID))
     
     # Get unique numbers available for this cell
     unique_numbers = set(range(1, 10)) - (row_values | col_values | square_values)
@@ -88,15 +90,15 @@ def get_neighbors_bestfs(board):
     col_new = 0
     unique_numbers = set(range(20))
     
-    for row in range(9):
-        for col in range(9):
+    for row in range(PUZZLE_SIZE):
+        for col in range(PUZZLE_SIZE):
             if (board[row][col] != 0):
                 continue
             # Get numbers already present in the row, column, and 3x3 sub-grid
             row_values = set(board[row])
-            col_values = set(board[i][col] for i in range(9))
-            start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-            square_values = set(board[i][j] for i in range(start_row, start_row + 3) for j in range(start_col, start_col + 3))
+            col_values = set(board[i][col] for i in range(PUZZLE_SIZE))
+            start_row, start_col = SUB_GRID * (row // SUB_GRID), SUB_GRID * (col // SUB_GRID)
+            square_values = set(board[i][j] for i in range(start_row, start_row + SUB_GRID) for j in range(start_col, start_col + SUB_GRID))
             
             # Get unique numbers available for this cell
             tmp = set(range(1, 10)) - (row_values | col_values | square_values)
@@ -132,14 +134,14 @@ def best_first_search(board):
 
 def valid_row(row, grid):
     s = set()
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         # Checking for values outside 0 and 9;
         # 0 is considered valid because it
         # denotes an empty cell.
         # Removing zeros and the checking for values and
         # outside 1 and 9 is another way of doing
         # the same thing.
-        if grid[row][i] < 0 or grid[row][i] > 9:
+        if grid[row][i] < 0 or grid[row][i] > PUZZLE_SIZE:
             print("Invalid value")
             return -1
         else:
@@ -157,14 +159,14 @@ def valid_row(row, grid):
 # 1 is the column is valid.
 def valid_col(col, grid):
     s = set()
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         # Checking for values outside 0 and 9;
         # 0 is considered valid because it
         # denotes an empty cell.
         # Removing zeros and the checking for values and
         # outside 1 and 9 is another way of doing
         # the same thing.
-        if grid[i][col] < 0 or grid[i][col] > 9:
+        if grid[i][col] < 0 or grid[i][col] > PUZZLE_SIZE:
             print("Invalid value")
             return -1
         else:
@@ -181,18 +183,18 @@ def valid_col(col, grid):
 # 0 if a subsquare contains repeated values
 # 1 if the subsquares are valid.
 def valid_subsquares(grid):
-    for row in range(0, 9, 3):
-        for col in range(0, 9, 3):
+    for row in range(0, PUZZLE_SIZE, SUB_GRID):
+        for col in range(0, PUZZLE_SIZE, SUB_GRID):
             s = set()
-            for r in range(row, row + 3):
-                for c in range(col, col + 3):
+            for r in range(row, row + SUB_GRID):
+                for c in range(col, col + SUB_GRID):
                     # Checking for values outside 0 and 9;
                     # 0 is considered valid because it
                     # denotes an empty cell.
                     # Removing zeros and the checking for values and
                     # outside 1 and 9 is another way of doing
                     # the same thing.
-                    if grid[r][c] < 0 or grid[r][c] > 9:
+                    if grid[r][c] < 0 or grid[r][c] > PUZZLE_SIZE:
                         print("Invalid value")
                         return -1
                     else:
@@ -206,7 +208,7 @@ def valid_subsquares(grid):
 
 # Function to check if the board invalid.
 def valid_board(grid):
-    for i in range(9):
+    for i in range(PUZZLE_SIZE):
         res1 = valid_row(i, grid)
         res2 = valid_col(i, grid)
         # If a row or a column is invalid, then the board is invalid.
@@ -216,35 +218,86 @@ def valid_board(grid):
     # if any one the subsquares is invalid, then the board is invalid.
     res3 = valid_subsquares(grid)
     if res3 < 1:
-        print("The board is invalid")
+        # print("The board is invalid")
         return False
     else:
-        print("The board is valid")
+        # print("The board is valid")
         return True
 
-def solve_puzzle():
-    filename = 'sudoku_puzzles.txt'  # Change this to the path of your file
-    puzzles = read_matrix_from_file(filename)
-    
-    start_time = time.time()
-    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    
-    for puzzle in puzzles:
-        solved_board = best_first_search((puzzle))
-        if solved_board and valid_board(puzzle):
-            print("Solution:")
-            for row in solved_board:
-                print(row)
-            print("\n")
-        else:
-            print("No solution exists for this puzzle.")
-    
-    end_time = time.time()
-    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
-    execution_time = end_time - start_time
-    
-    print("Total execution time:", execution_time, "seconds")
-    print("Peak memory usage:", peak_memory_usage, "kilobytes")
+def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
+    if (is_read_from_file):
+        filename = 'sudoku_puzzles.txt'  # Change this to the path of your file
+        puzzles = read_matrix_from_file(filename)
+        
+        start_time = time.time()
+        peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        
+        for puzzle in puzzles:
+            solved_board = best_first_search((puzzle))
+            if solved_board and valid_board(puzzle):
+                print("Solution:")
+                for row in solved_board:
+                    print(row)
+                print("\n")
+            else:
+                print("No solution exists for this puzzle.")
+        
+        end_time = time.time()
+        peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
+        execution_time = end_time - start_time
+        
+        print("Total execution time:", execution_time, "seconds")
+        print("Peak memory usage:", peak_memory_usage, "kilobytes")
+    else:
+        avg_execution_time = [0]*20
+        avg_peak_memory_usage = [0]*20
+        p = [0]*20  # Proportion of fixed cells
+        for i in range(1,20): # 20 different categories
+            p[i] = i*0.05
+            for j in range(1,20): # 20 instances were created per categor
+                puzzle = generate_sudoku(p[i])
+                for k in range(1,20): # 20 repeated test runs
+                    start_time = time.time()
+                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    
+                    if (type_algorithm=="DFS"):
+                        solved_board = DFS((puzzle))
+                    elif (type_algorithm=="BestFS"):
+                        solved_board = best_first_search((puzzle))
+                    
+                    end_time = time.time()
+                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
+                    execution_time = end_time - start_time
+                    
+                    avg_execution_time[i] += execution_time
+                    avg_peak_memory_usage[i] += peak_memory_usage
+                    # print("Total execution time:", execution_time, "seconds")
+                    # print("Peak memory usage:", peak_memory_usage, "kilobytes")
+                avg_execution_time[i] = avg_execution_time[i]/20
+                avg_peak_memory_usage[i] = avg_peak_memory_usage[i]/20
+
+                if not solved_board or not valid_board(puzzle):
+                    print("No solution exists for this puzzle.")
+            # for row in sudoku_matrix:
+            #     print(row)
+            # print()
+                    
+        print(type_algorithm + ":")
+        print("Average execution time: " + str(sum(avg_execution_time)/len(avg_execution_time)))
+        print("Average peak memory usage time: " + str(sum(avg_peak_memory_usage)/len(avg_peak_memory_usage)))
+
+        # Create the bar chart
+        plt.bar(p, avg_execution_time, width=0.03)  # Adjust width as needed
+        plt.title(type_algorithm)
+        plt.xlabel('p')
+        plt.ylabel('Average execute time')
+        plt.show()
+
+        plt.bar(p, avg_peak_memory_usage, width=0.03)  # Adjust width as needed
+        plt.xlabel('p')
+        plt.title(type_algorithm)
+        plt.ylabel('Average peak memory usage time')
+        plt.show()
 
 def read_matrix_from_file(filename):
     matrices = []
@@ -264,4 +317,5 @@ def read_matrix_from_file(filename):
             matrices.append(matrix)
     return matrices
 
-solve_puzzle()
+solve_puzzle(False, "DFS")
+solve_puzzle(False, "BestFS")
