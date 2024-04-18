@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from multiprocessing import Process, Lock, Manager
+import tracemalloc
 
 PUZZLE_SIZE = 9
 SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
-NUM_OF_CATEGORIES = 10
+NUM_OF_CATEGORIES = 20
 STEP = 1/NUM_OF_CATEGORIES
 NUM_OF_INSTANCES = 10
-NUM_OF_REPEAT = 2
+NUM_OF_REPEAT = 10
 
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
@@ -260,27 +261,26 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
     else:
         manager = Manager()
 
-        avg_execution_time_dfs = manager.list([0] * 20)
-        avg_peak_memory_usage_dfs = manager.list([0] * 20)
-        avg_execution_time_bestfs = manager.list([0] * 20)
-        avg_peak_memory_usage_bestfs = manager.list([0] * 20)
+        avg_execution_time_dfs = manager.list([0] * NUM_OF_CATEGORIES)
+        avg_peak_memory_usage_dfs = manager.list([0] * NUM_OF_CATEGORIES)
+        avg_execution_time_bestfs = manager.list([0] * NUM_OF_CATEGORIES)
+        avg_peak_memory_usage_bestfs = manager.list([0] * NUM_OF_CATEGORIES)
 
-        # avg_execution_time = [0]*20
-        # avg_peak_memory_usage = [0]*20
-        p = [0]*20  # Proportion of fixed cells
-        for i in range(1,NUM_OF_CATEGORIES): # 20 different categories
+        p = [0]*NUM_OF_CATEGORIES  # Proportion of fixed cells
+        for i in range(0,NUM_OF_CATEGORIES): # different categories
             p[i] = i*STEP
-            for j in range(1,NUM_OF_INSTANCES): # 20 instances were created per categor
+            print("Iteration with p=", p[i])
+            for j in range(0,NUM_OF_INSTANCES): # instances were created per categor
                 puzzle = generate_sudoku(p[i])
-                # for k in range(1,20): # 20 repeated test runs
                 def repeat(share_avg_execution_time_dfs, share_avg_peak_memory_usage_dfs, share_avg_execution_time_bestfs, share_avg_peak_memory_usage_bestfs):
                     #DFS
                     start_time = time.time()
-                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                    
+                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    tracemalloc.start()
                     solved_board = DFS((puzzle))
-                        
-                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
+                    peak_memory_usage = tracemalloc.get_traced_memory()[1]
+                    tracemalloc.stop()
+                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
                     execution_time = end_time - start_time
 
@@ -306,14 +306,14 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                         share_avg_peak_memory_usage_bestfs[i] += peak_memory_usage
                     # print("Total execution time:", execution_time, "seconds")
                     # print("Peak memory usage:", peak_memory_usage, "kilobytes")
-                threads = []
+                processes = []
                 for n in range(NUM_OF_REPEAT):
-                    thread = Process(target=repeat, args=(avg_execution_time_dfs, avg_peak_memory_usage_dfs, avg_execution_time_bestfs, avg_peak_memory_usage_bestfs))
-                    thread.start()
-                    threads.append(thread)
+                    process = Process(target=repeat, args=(avg_execution_time_dfs, avg_peak_memory_usage_dfs, avg_execution_time_bestfs, avg_peak_memory_usage_bestfs))
+                    process.start()
+                    processes.append(process)
     
-                for thread in threads:
-                    thread.join()
+                for process in processes:
+                    process.join()
 
                 avg_execution_time_dfs[i] = avg_execution_time_dfs[i]/NUM_OF_REPEAT
                 avg_peak_memory_usage_dfs[i] = avg_peak_memory_usage_dfs[i]/NUM_OF_REPEAT
@@ -324,38 +324,60 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
             # for row in sudoku_matrix:
             #     print(row)
             # print()
+
+        open('output.txt', 'w').close()
+        f = open("output.txt", "a")
+        f.write("DFS:\n")
+        f.write("Max execution time: " + str(max(avg_execution_time_dfs)) + " seconds\n")
+        f.write("Max peak memory usage: " + str(max(avg_peak_memory_usage_dfs)) + " kilobytes\n")
+        f.write("Average execution time: " + str(sum(avg_execution_time_dfs)/len(avg_execution_time_dfs)) + " seconds\n")
+        f.write("Average peak memory usage: " + str(sum(avg_peak_memory_usage_dfs)/len(avg_peak_memory_usage_dfs)) + " kilobytes\n\n")
+        f.write("BestFS:\n")
+        f.write("Max execution time: " + str(max(avg_execution_time_bestfs)) + " seconds\n")
+        f.write("Max peak memory usage: " + str(max(avg_peak_memory_usage_bestfs)) + " kilobytes\n")
+        f.write("Average execution time: " + str(sum(avg_execution_time_bestfs)/len(avg_execution_time_bestfs)) + " seconds\n")
+        f.write("Average peak memory usage: " + str(sum(avg_peak_memory_usage_bestfs)/len(avg_peak_memory_usage_bestfs)) + " kilobytes\n\n")
+        f.close()
                     
-        print("DFS:")
-        print("Average execution time: " + str(sum(avg_execution_time_dfs)/len(avg_execution_time_dfs)))
-        print("Average peak memory usage: " + str(sum(avg_peak_memory_usage_dfs)/len(avg_peak_memory_usage_dfs)))
+        # print("DFS:")
+        # print("Max execution time:", max(avg_execution_time_dfs), "seconds")
+        # print("Max peak memory usage:", max(avg_peak_memory_usage_dfs), "kilobytes")
+        # print("Average execution time:", sum(avg_execution_time_dfs)/len(avg_execution_time_dfs), "seconds")
+        # print("Average peak memory usage:", sum(avg_peak_memory_usage_dfs)/len(avg_peak_memory_usage_dfs), "kilobytes")
 
-        print("BestFS:")
-        print("Average execution time: " + str(sum(avg_execution_time_bestfs)/len(avg_execution_time_bestfs)))
-        print("Average peak memory usage: " + str(sum(avg_peak_memory_usage_bestfs)/len(avg_peak_memory_usage_bestfs)))
+        # print("BestFS:")
+        # print("Max execution time:", max(avg_execution_time_bestfs), "seconds")
+        # print("Max peak memory usage:", max(avg_peak_memory_usage_bestfs), "kilobytes")
+        # print("Average execution time:", sum(avg_execution_time_bestfs)/len(avg_execution_time_bestfs), "seconds")
+        # print("Average peak memory usage:", sum(avg_peak_memory_usage_bestfs)/len(avg_peak_memory_usage_bestfs), "kilobytes")
         # Create the bar chart
-        plt.bar(p, avg_execution_time_dfs, width=0.03)  # Adjust width as needed
+        plt.bar(p, avg_execution_time_dfs, width=0.03, color="blue") 
         plt.title("DFS")
         plt.xlabel('p')
         plt.ylabel('Average execute time')
-        plt.show()
+        plt.savefig('DFS_exe_time.png')
+        # plt.show()
 
-        plt.bar(p, avg_execution_time_dfs, width=0.03)  # Adjust width as needed
+        plt.bar(p, avg_peak_memory_usage_dfs, width=0.03, color="blue")
         plt.xlabel('p')
         plt.title("DFS")
         plt.ylabel('Average peak memory usage time')
-        plt.show()
+        plt.savefig('DFS_memory.png')
+        # plt.show()
 
-        plt.bar(p, avg_execution_time_bestfs, width=0.03)  # Adjust width as needed
+        plt.bar(p, avg_execution_time_bestfs, width=0.03, color="blue")
         plt.title("BestFS")
         plt.xlabel('p')
         plt.ylabel('Average execute time')
-        plt.show()
+        plt.savefig('BestFS_exec_time.png')
+        # plt.show()
 
-        plt.bar(p, avg_peak_memory_usage_bestfs, width=0.03)  # Adjust width as needed
+        plt.bar(p, avg_peak_memory_usage_bestfs, width=0.03, color="blue")
         plt.xlabel('p')
         plt.title("BestFS")
         plt.ylabel('Average peak memory usage time')
-        plt.show()
+        plt.savefig('BestFS_memorytime.png')
+        # plt.show()
 
 def read_matrix_from_file(filename):
     matrices = []
