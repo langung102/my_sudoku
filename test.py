@@ -12,7 +12,7 @@ SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
 NUM_OF_CATEGORIES = 20
 STEP = 1/NUM_OF_CATEGORIES
 NUM_OF_INSTANCES = 10
-NUM_OF_REPEAT = 10
+NUM_OF_REPEAT = 5
 
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
@@ -278,7 +278,7 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     tracemalloc.start()
                     peak_memory_usage = tracemalloc.get_traced_memory()[0]
                     solved_board = DFS((puzzle))
-                    peak_memory_usage = peak_memory_usage - tracemalloc.get_traced_memory()[0]
+                    peak_memory_usage = tracemalloc.get_traced_memory()[0] - peak_memory_usage
                     tracemalloc.stop()
                     # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
@@ -294,7 +294,7 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     tracemalloc.start()
                     peak_memory_usage = tracemalloc.get_traced_memory()[0]
                     solved_board = best_first_search((puzzle))
-                    peak_memory_usage = peak_memory_usage - tracemalloc.get_traced_memory()[0]
+                    peak_memory_usage = tracemalloc.get_traced_memory()[0] - peak_memory_usage
                     tracemalloc.stop()
                     # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
