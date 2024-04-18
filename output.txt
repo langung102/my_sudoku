@@ -1,8 +1,8 @@
 DFS:
 Max execution time: 1.5594731624714844 seconds
-Max peak memory usage: 8881.111421542399  ytes
+Max peak memory usage: 8881.111421542399  bytes
 Average execution time: 0.10177455934129029 seconds
-Average peak memory usage: 5328.037857966081 bbytes
+Average peak memory usage: 5328.037857966081 bytes
 
 BestFS:
 Max execution time: 0.14913648785134276 seconds
