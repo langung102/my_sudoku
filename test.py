@@ -358,13 +358,15 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
         plt.ylabel('Average execute time')
         plt.savefig('DFS_exe_time.png')
         # plt.show()
+        plt.clf()
 
         plt.bar(p, avg_peak_memory_usage_dfs, width=0.03, color="blue")
         plt.xlabel('p')
         plt.title("DFS")
         plt.ylabel('Average peak memory usage time')
         plt.savefig('DFS_memory.png')
-        # plt.show()
+        # # plt.show()
+        plt.clf()
 
         plt.bar(p, avg_execution_time_bestfs, width=0.03, color="blue")
         plt.title("BestFS")
@@ -372,13 +374,15 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
         plt.ylabel('Average execute time')
         plt.savefig('BestFS_exec_time.png')
         # plt.show()
+        plt.clf()
 
         plt.bar(p, avg_peak_memory_usage_bestfs, width=0.03, color="blue")
         plt.xlabel('p')
         plt.title("BestFS")
         plt.ylabel('Average peak memory usage time')
-        plt.savefig('BestFS_memorytime.png')
+        plt.savefig('BestFS_memory.png')
         # plt.show()
+        plt.clf()
 
 def read_matrix_from_file(filename):
     matrices = []
