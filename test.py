@@ -9,10 +9,10 @@ import tracemalloc
 
 PUZZLE_SIZE = 9
 SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
-NUM_OF_CATEGORIES = 20
+NUM_OF_CATEGORIES = 10
 STEP = 1/NUM_OF_CATEGORIES
-NUM_OF_INSTANCES = 10
-NUM_OF_REPEAT = 10
+NUM_OF_INSTANCES = 5
+NUM_OF_REPEAT = 5
 
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
@@ -291,11 +291,12 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                         share_avg_peak_memory_usage_dfs[i] += peak_memory_usage
                     #BestFS
                     start_time = time.time()
-                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                    
+                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                    tracemalloc.start()
                     solved_board = best_first_search((puzzle))
-                        
-                    peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
+                    peak_memory_usage = tracemalloc.get_traced_memory()[1]
+                    tracemalloc.stop()
+                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
                     execution_time = end_time - start_time
 
