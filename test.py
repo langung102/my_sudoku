@@ -112,11 +112,10 @@ def get_neighbors_gbfs(board):
                 row_new = row
                 col_new = col
     
-    # Generate neighbor nodes with priorities based on uniqueness
+    # Generate neighbor nodes
     for num in unique_numbers:
         new_board = [row[:] for row in board]
         new_board[row_new][col_new] = num
-        # priority = len(unique_numbers)  # Higher priority for cells with fewer choices
         neighbors.append((new_board))
     return neighbors
 
@@ -130,7 +129,7 @@ def greedy_best_first_search(board):
         if not empty_location:
             return current_board
         
-        # Get neighbor nodes and add them to the priority queue
+        # Get neighbor nodes at spot have minumum number of candidates and add them to stack
         neighbors = get_neighbors_gbfs(current_board)
         for neighbor_board in neighbors:
             stack.append(neighbor_board)
@@ -281,7 +280,6 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     solved_board = DFS((puzzle))
                     peak_memory_usage = tracemalloc.get_traced_memory()[0] - peak_memory_usage
                     tracemalloc.stop()
-                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
                     execution_time = end_time - start_time
 
@@ -297,7 +295,6 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     solved_board = greedy_best_first_search((puzzle))
                     peak_memory_usage = tracemalloc.get_traced_memory()[0] - peak_memory_usage
                     tracemalloc.stop()
-                    # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
                     end_time = time.time()
                     execution_time = end_time - start_time
 
@@ -306,8 +303,7 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     with lock:
                         share_avg_execution_time_gbfs[i] += execution_time
                         share_avg_peak_memory_usage_gbfs[i] += peak_memory_usage
-                    # print("Total execution time:", execution_time, "seconds")
-                    # print("Peak memory usage:", peak_memory_usage, "kilobytes")
+
                 processes = []
                 for n in range(NUM_OF_REPEAT):
                     process = Process(target=repeat, args=(avg_execution_time_dfs, avg_peak_memory_usage_dfs, avg_execution_time_gbfs, avg_peak_memory_usage_gbfs))
@@ -321,11 +317,6 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                 avg_peak_memory_usage_dfs[i] = avg_peak_memory_usage_dfs[i]/NUM_OF_REPEAT
                 avg_execution_time_gbfs[i] = avg_execution_time_gbfs[i]/NUM_OF_REPEAT
                 avg_peak_memory_usage_gbfs[i] = avg_peak_memory_usage_gbfs[i]/NUM_OF_REPEAT
-                # print("Total execution time:", avg_execution_time[i], "seconds")
-                # print("Peak memory usage:", avg_peak_memory_usage[i], "kilobytes")
-            # for row in sudoku_matrix:
-            #     print(row)
-            # print()
 
         open('output.txt', 'w').close()
         f = open("output.txt", "a")
