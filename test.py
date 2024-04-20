@@ -120,7 +120,7 @@ def get_neighbors_gbfs(board):
         neighbors.append((new_board))
     return neighbors
 
-def best_first_search(board):
+def greedy_best_first_search(board):
     stack = [board]
     
     while stack:
@@ -244,7 +244,7 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
             if (type_algorithm=="DFS"):
                 solved_board = DFS((puzzle))
             elif (type_algorithm=="GBFS"):
-                solved_board = best_first_search((puzzle))
+                solved_board = greedy_best_first_search((puzzle))
             if solved_board and valid_board(puzzle):
                 print("Solution:")
                 for row in solved_board:
@@ -294,7 +294,7 @@ def solve_puzzle(is_read_from_file=False, type_algorithm="DFS"):
                     start_time = time.time()
                     tracemalloc.start()
                     peak_memory_usage = tracemalloc.get_traced_memory()[0]
-                    solved_board = best_first_search((puzzle))
+                    solved_board = greedy_best_first_search((puzzle))
                     peak_memory_usage = tracemalloc.get_traced_memory()[0] - peak_memory_usage
                     tracemalloc.stop()
                     # peak_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - peak_memory_usage
@@ -403,6 +403,6 @@ def read_matrix_from_file(filename):
             matrices.append(matrix)
     return matrices
 
-solve_puzzle(True, "DFS")
-# solve_puzzle(True, "GBFS")
+# solve_puzzle(True, "DFS")
+solve_puzzle(True, "GBFS")
 # solve_puzzle()
