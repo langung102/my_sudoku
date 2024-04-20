@@ -11,8 +11,8 @@ PUZZLE_SIZE = 9
 SUB_GRID = int(math.sqrt(PUZZLE_SIZE))
 NUM_OF_CATEGORIES = 20
 STEP = 1/NUM_OF_CATEGORIES
-NUM_OF_INSTANCES = 2
-NUM_OF_REPEAT = 2
+NUM_OF_INSTANCES = 10
+NUM_OF_REPEAT = 5
 
 def is_valid(board, row, col, num):
     # Check if the number is already present in the current row
@@ -395,5 +395,5 @@ def read_matrix_from_file(filename):
     return matrices
 
 # solve_puzzle(True, "DFS")
-solve_puzzle(True, "GBFS")
-# solve_puzzle()
+# solve_puzzle(True, "GBFS")
+solve_puzzle()

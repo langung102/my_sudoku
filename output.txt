@@ -1,0 +1,12 @@
+DFS:
+Max execution time: 3.0797037482261658 seconds
+Max memory usage: 10659.0 bytes
+Average execution time: 0.18001531958580017 seconds
+Average memory usage: 6374.0 bytes
+
+GBFS:
+Max execution time: 0.06263011693954468 seconds
+Max memory usage: 9924.0 bytes
+Average execution time: 0.016596883535385132 seconds
+Average memory usage: 4899.1 bytes
+
