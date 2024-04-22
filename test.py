@@ -394,6 +394,6 @@ def read_matrix_from_file(filename):
             matrices.append(matrix)
     return matrices
 
-# solve_puzzle(True, "DFS")
-# solve_puzzle(True, "GBFS")
+solve_puzzle(True, "DFS")
+solve_puzzle(True, "GBFS")
 solve_puzzle()
